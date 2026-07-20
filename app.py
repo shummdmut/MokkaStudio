@@ -1,10 +1,12 @@
 import sqlite3
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_mokka_studio_exclusive'
 
-DB_FILE = 'database.db'
+# ПОСТІЙНИЙ ДИСК RENDER (ДАНІ БІЛЬШЕ НІКОЛИ НЕ ЗНИКНУТЬ)
+DB_FILE = '/data/database.db'
 
 def get_db():
     conn = sqlite3.connect(DB_FILE)
@@ -45,8 +47,8 @@ def init_db():
         cursor.execute("SELECT COUNT(*) FROM products")
         if cursor.fetchone() == 0:
             products_data = [
-                ("Кругла сумка-кросбоді 'Mokka Mini'", 1450, None, "bag_round.jpg", "available"),
-                ("Капелюх-канотьє з чорною стрічкою", 1200, None, "hat_canotier.jpg", "available"),
+                ("Кругла сумка-кросбоді 'Mokka Mini'", 1450, None, "dune.png", "available"),
+                ("Капелюх-канотьє з чорною стрічкою", 1200, None, "oreo.png", "available"),
                 ("Трендовий шопер 'Еко-Елегант'", 1900, None, "shopper_tan.jpg", "available"),
                 ("Серветки для сервірування (сет 4 шт)", 850, None, "placemats.jpg", "order"),
                 ("Плетений кошик для дрібниць", 950, None, "basket_decor.jpg", "order"),
@@ -58,12 +60,15 @@ def init_db():
             )
         conn.commit()
 
+# Автоматично створюємо файл бази даних у захищеній папці /data при першому запуску
+if not os.path.exists('/data'):
+    os.makedirs('/data')
+
 init_db()
 
 @app.route('/')
 def home():
     conn = get_db()
-    # Сортуємо так, щоб available (В наявності) завжди було вгорі вітрини
     all_items = conn.execute("SELECT * FROM products ORDER BY status ASC, id DESC").fetchall()
     conn.close()
     return render_template('index.html', products=all_items)
@@ -90,7 +95,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == 'admin' and password == 'RP09-33DD_@001':
+        if username == 'admin' and password == 'admin123':
             session['is_admin'] = True
             session['username'] = 'Адміністратор Mokka'
             flash('Ви увійшли в панель адміністратора!', 'success')
@@ -232,8 +237,8 @@ def checkout():
     conn.commit()
     conn.close()
     session.pop('cart', None)
-    flash('Дякуємо! Ваше замовлення успішно оформлено. Чекайте на повідомлення від майстра Mokka Studio.', 'success')
+    flash('Дякуємо! Ваше замовлення успішно оформлено. Його додано на панель адміністратора.', 'success')
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run()
