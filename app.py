@@ -95,7 +95,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == 'admin' and password == 'admin123':
+        if username == 'admin' and password == 'RP09-33DD_@001':
             session['is_admin'] = True
             session['username'] = 'Адміністратор Mokka'
             flash('Ви увійшли в панель адміністратора!', 'success')
